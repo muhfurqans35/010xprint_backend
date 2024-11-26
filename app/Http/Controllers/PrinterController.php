@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Printer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 
 class PrinterController extends Controller
 {
@@ -58,5 +59,30 @@ class PrinterController extends Controller
         $printer->delete();
 
         return response()->json(null, 204);
+    }
+
+    public function updateStatus()
+    {
+        try {
+            // Kirim permintaan ke Go untuk mendapatkan status printer
+            $response = Http::get('http://192.168.1.31:8080/get-printer-status'); // URL Go Anda
+
+            if ($response->successful()) {
+                $printerStatus = $response->json();
+                return response()->json([
+                    'message' => 'Printer status fetched successfully',
+                    'data' => $printerStatus,
+                ]);
+            }
+
+            return response()->json([
+                'error' => 'Failed to fetch printer status from Go',
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error communicating with Go backend',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
     }
 }
